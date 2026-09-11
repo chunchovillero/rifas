@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">Rifas simples y transparentes</p>
+  <h1>Crea una rifa y comienza a reunir fondos</h1>
+  <p>Configura el premio, el precio y la cantidad de números desde un solo lugar.</p>
+  <a class="button" href="{% url 'raffles:create' %}">Crear mi rifa</a>
+</section>
+
+<section>
+  <h2>Rifas disponibles</h2>
+  <div class="cards">
+    {% for raffle in raffles %}
+      <article class="card">
+        <span class="badge">{{ raffle.get_status_display }}</span>
+        <h3><a href="{{ raffle.get_absolute_url }}">{{ raffle.title }}</a></h3>
+        <p>{{ raffle.description|truncatewords:22 }}</p>
+        <strong>${{ raffle.number_price }} por número</strong>
+      </article>
+    {% empty %}
+      <p class="empty">Aún no hay rifas publicadas. ¡Crea la primera!</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
+

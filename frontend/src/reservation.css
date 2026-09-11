@@ -1,0 +1,61 @@
+.numbers button {
+  cursor: pointer;
+}
+
+.numbers button.selected {
+  background: #1e7a52;
+  border-color: #1e7a52;
+  color: #fff;
+}
+
+.numbers button:disabled {
+  cursor: not-allowed;
+}
+
+.reservation {
+  max-width: 650px;
+  margin: 2rem 0 5rem;
+  padding: 1.5rem;
+  background: #fff;
+  border: 1px solid #dce4dd;
+  border-radius: 18px;
+}
+
+.reservation form,
+.reservation label {
+  display: grid;
+  gap: 1rem;
+}
+
+.reservation label {
+  gap: .4rem;
+  font-weight: 650;
+}
+
+.success {
+  padding: 1rem;
+  border-radius: 10px;
+  background: #dff5b8;
+  color: #245331;
+}
+
+.payment-box { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #dce4dd; }
+.payment-box dl { display: grid; grid-template-columns: 150px 1fr; gap: .4rem 1rem; padding: 1rem; background: #f7f8f3; border-radius: 10px; }
+.payment-box dt { color: #617168; }
+.payment-box dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+@media (max-width: 520px) { .payment-box dl { grid-template-columns: 1fr; } }
+.buyer-reservation { max-width:800px; margin:3rem auto; padding:2rem; background:#fff; border:1px solid #dce4dd; border-radius:18px; }
+.buyer-reservation code { overflow-wrap:anywhere; }
+.reservation-summary { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin:2rem 0; }
+.reservation-summary div { display:flex; flex-direction:column; padding:1rem; background:#f7f8f3; border-radius:10px; }
+.reservation-summary span,.buyer-reservation dt { color:#617168; }
+.buyer-reservation dl { display:grid; grid-template-columns:160px 1fr; gap:.5rem 1rem; }
+.buyer-reservation dd { margin:0; font-weight:700; }
+.buyer-reservation form { display:grid; gap:1rem; margin-top:2rem; }
+.buyer-reservation label { display:grid; gap:.4rem; font-weight:700; }
+.status { display:inline-block; padding:.3rem .65rem; border-radius:99px; background:#e6ece7; font-size:.78rem; font-weight:850; text-transform:uppercase; }
+.status--active { background:#fff0b8; }.status--confirmed { background:#dff5b8; }.status--expired,.status--cancelled { background:#f2d1d1; }
+.countdown { display:flex; align-items:center; justify-content:space-between; margin:1.5rem 0; padding:1rem 1.25rem; background:#14251d; color:#fff; border-radius:12px; }
+.countdown strong { font-size:1.8rem; font-variant-numeric:tabular-nums; }
+.cancel-reservation { margin-top:1rem; border:0; background:none; color:#9c2727; font:inherit; text-decoration:underline; cursor:pointer; }
+@media (max-width:650px) { .reservation-summary { grid-template-columns:1fr; }.buyer-reservation dl { grid-template-columns:1fr; } }

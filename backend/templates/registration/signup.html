@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Crear cuenta · Rifácil{% endblock %}
+{% block content %}
+<div class="form-shell">
+  <h1>Crea tu cuenta</h1>
+  <form method="post" class="stacked-form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="button" type="submit">Registrarme</button>
+  </form>
+</div>
+{% endblock %}
+

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Mis rifas · Rifácil{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <div><p class="eyebrow">Panel del organizador</p><h1>Mis rifas</h1></div>
+  <a class="button" href="{% url 'raffles:create' %}">Nueva rifa</a>
+</div>
+<div class="cards">
+  {% for raffle in raffles %}
+    <article class="card">
+      <span class="badge">{{ raffle.get_status_display }}</span>
+      <h2><a href="{{ raffle.get_absolute_url }}">{{ raffle.title }}</a></h2>
+      <p>{{ raffle.total_numbers }} números · ${{ raffle.number_price }} cada uno</p>
+    </article>
+  {% empty %}
+    <div class="empty"><p>Todavía no has creado ninguna rifa.</p></div>
+  {% endfor %}
+</div>
+{% endblock %}
+

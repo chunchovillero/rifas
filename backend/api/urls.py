@@ -1,0 +1,51 @@
+from django.urls import path
+
+from .views import (
+    AdminDashboardView, AdminPaymentListView, AdminPayoutCreateView, AdminPayoutListView, AdminRaffleDetailView, AdminRaffleListView, AdminReservationActionView, AdminReservationListView, BuyerReservationCancelView, BuyerReservationDetailView, CoverUploadView, CoverView, DrawRaffleView, LoginView, LogoutView, MeView, MyRaffleDetailView, MyRaffleListCreateView,
+    ManualSaleView, MercadoPagoCheckoutView, MercadoPagoWebhookView, MyPlanView, PlanCheckoutView, RaffleProCheckoutView, MyRaffleNumberListView, MyReservationListView, PublicRaffleListView, RaffleDetailView, RegisterView,
+    ReceiptDownloadView, ReceiptUploadView, ReservationActionView, ReserveNumbersView,
+)
+
+urlpatterns = [
+    path("auth/register/", RegisterView.as_view(), name="api-register"),
+    path("auth/login/", LoginView.as_view(), name="api-login"),
+    path("auth/logout/", LogoutView.as_view(), name="api-logout"),
+    path("auth/me/", MeView.as_view(), name="api-me"),
+    path("admin/dashboard/", AdminDashboardView.as_view(), name="api-admin-dashboard"),
+    path("admin/raffles/", AdminRaffleListView.as_view(), name="api-admin-raffles"),
+    path("admin/raffles/<slug:slug>/", AdminRaffleDetailView.as_view(), name="api-admin-raffle-detail"),
+    path("admin/reservations/", AdminReservationListView.as_view(), name="api-admin-reservations"),
+    path("admin/reservations/<uuid:code>/<str:action>/", AdminReservationActionView.as_view(), name="api-admin-reservation-action"),
+    path("admin/payments/", AdminPaymentListView.as_view(), name="api-admin-payments"),
+    path("admin/payouts/", AdminPayoutListView.as_view(), name="api-admin-payouts"),
+    path("admin/payouts/<slug:slug>/", AdminPayoutCreateView.as_view(), name="api-admin-payout-create"),
+    path("raffles/", PublicRaffleListView.as_view(), name="api-raffles"),
+    path("raffles/<slug:slug>/", RaffleDetailView.as_view(), name="api-raffle-detail"),
+    path("raffles/<slug:slug>/cover/", CoverView.as_view(), name="api-raffle-cover"),
+    path("raffles/<slug:slug>/reserve/", ReserveNumbersView.as_view(), name="api-reserve"),
+    path("reservations/<uuid:code>/receipt/", ReceiptUploadView.as_view(), name="api-receipt"),
+    path("reservations/<uuid:code>/", BuyerReservationDetailView.as_view(), name="api-buyer-reservation"),
+    path("reservations/<uuid:code>/cancel/", BuyerReservationCancelView.as_view(), name="api-buyer-cancel"),
+    path("reservations/<uuid:code>/mercadopago/", MercadoPagoCheckoutView.as_view(), name="api-mercadopago-checkout"),
+    path("payments/mercadopago/webhook/", MercadoPagoWebhookView.as_view(), name="api-mercadopago-webhook"),
+    path("me/plan/", MyPlanView.as_view(), name="api-my-plan"),
+    path("me/plan/mercadopago/", PlanCheckoutView.as_view(), name="api-plan-mercadopago-checkout"),
+    path("me/raffles/<slug:slug>/pro/mercadopago/", RaffleProCheckoutView.as_view(), name="api-raffle-pro-checkout"),
+    path(
+        "me/reservations/<uuid:code>/receipt/",
+        ReceiptDownloadView.as_view(),
+        name="api-receipt-download",
+    ),
+    path("me/raffles/", MyRaffleListCreateView.as_view(), name="api-my-raffles"),
+    path("me/raffles/<slug:slug>/", MyRaffleDetailView.as_view(), name="api-my-raffle-detail"),
+    path("me/raffles/<slug:slug>/numbers/", MyRaffleNumberListView.as_view(), name="api-my-raffle-numbers"),
+    path("me/raffles/<slug:slug>/cover/", CoverUploadView.as_view(), name="api-my-raffle-cover"),
+    path("me/raffles/<slug:slug>/draw/", DrawRaffleView.as_view(), name="api-raffle-draw"),
+    path("me/raffles/<slug:slug>/manual-sale/", ManualSaleView.as_view(), name="api-manual-sale"),
+    path("me/reservations/", MyReservationListView.as_view(), name="api-my-reservations"),
+    path(
+        "me/reservations/<uuid:code>/<str:action>/",
+        ReservationActionView.as_view(),
+        name="api-reservation-action",
+    ),
+]

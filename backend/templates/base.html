@@ -1,0 +1,31 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Rifácil{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="container nav">
+      <a class="brand" href="{% url 'raffles:home' %}">Rifácil</a>
+      <div class="nav-links">
+        {% if user.is_authenticated %}
+          <a href="{% url 'raffles:dashboard' %}">Mis rifas</a>
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button class="link-button" type="submit">Salir</button>
+          </form>
+        {% else %}
+          <a href="{% url 'login' %}">Ingresar</a>
+          <a class="button small" href="{% url 'raffles:signup' %}">Crear cuenta</a>
+        {% endif %}
+      </div>
+    </nav>
+  </header>
+  <main class="container">{% block content %}{% endblock %}</main>
+</body>
+</html>
+

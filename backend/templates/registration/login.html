@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Ingresar · Rifácil{% endblock %}
+{% block content %}
+<div class="form-shell">
+  <h1>Ingresa a tu cuenta</h1>
+  <form method="post" class="stacked-form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="button" type="submit">Ingresar</button>
+  </form>
+  <p>¿No tienes cuenta? <a href="{% url 'raffles:signup' %}">Regístrate</a>.</p>
+</div>
+{% endblock %}
+

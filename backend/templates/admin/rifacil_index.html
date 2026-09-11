@@ -1,0 +1,26 @@
+{% extends "admin/index.html" %}
+
+{% block content %}
+<style>
+  .rifacil-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin:0 0 24px; }
+  .rifacil-stat { padding:18px; border-radius:10px; background:#fff; border:1px solid #dfe4ee; }
+  .rifacil-stat span { display:block; color:#637084; font-size:12px; text-transform:uppercase; font-weight:700; }
+  .rifacil-stat strong { display:block; margin-top:8px; color:#063a9b; font-size:26px; }
+  .rifacil-recent { margin:0 0 24px; padding:18px; border-radius:10px; background:#fff; border:1px solid #dfe4ee; }
+  .rifacil-recent table { width:100%; border-collapse:collapse; } .rifacil-recent th,.rifacil-recent td { padding:9px 4px; border-bottom:1px solid #edf0f5; text-align:left; }
+  @media(max-width:800px){.rifacil-stats{grid-template-columns:1fr 1fr}}
+</style>
+<div class="rifacil-stats">
+  <div class="rifacil-stat"><span>Rifas publicadas</span><strong>{{ rifacil_stats.published_raffles }}</strong></div>
+  <div class="rifacil-stat"><span>Reservas activas</span><strong>{{ rifacil_stats.active_reservations }}</strong></div>
+  <div class="rifacil-stat"><span>Pagos por liquidar</span><strong>{{ rifacil_stats.pending_payouts }}</strong></div>
+  <div class="rifacil-stat"><span>Recaudado online</span><strong>${{ rifacil_stats.collected }}</strong></div>
+</div>
+<section class="rifacil-recent">
+  <h2>Reservas recientes</h2>
+  <table><thead><tr><th>Rifa</th><th>Comprador</th><th>Estado</th><th>Creada</th></tr></thead><tbody>
+  {% for reservation in rifacil_stats.recent_reservations %}<tr><td>{{ reservation.raffle }}</td><td>{{ reservation.buyer_name }}</td><td>{{ reservation.get_status_display }}</td><td>{{ reservation.created_at }}</td></tr>{% empty %}<tr><td colspan="4">Todavía no hay reservas.</td></tr>{% endfor %}
+  </tbody></table>
+</section>
+{{ block.super }}
+{% endblock %}

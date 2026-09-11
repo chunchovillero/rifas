@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ raffle.title }} · Rifácil{% endblock %}
+{% block content %}
+<section class="raffle-header">
+  <span class="badge">{{ raffle.get_status_display }}</span>
+  <h1>{{ raffle.title }}</h1>
+  <p>{{ raffle.description }}</p>
+  <div class="prize"><small>Premio</small><strong>{{ raffle.prize }}</strong></div>
+  <p>Organiza <strong>{{ raffle.owner.username }}</strong> · ${{ raffle.number_price }} por número</p>
+</section>
+<section>
+  <h2>Elige tus números</h2>
+  <div class="number-grid">
+    {% for item in raffle.numbers.all %}
+      <button class="number number--{{ item.status }}" {% if item.status != 'available' %}disabled{% endif %}>
+        {{ item.number }}
+      </button>
+    {% endfor %}
+  </div>
+  <p class="hint">La reserva de números será el próximo módulo que implementaremos.</p>
+</section>
+{% endblock %}
+

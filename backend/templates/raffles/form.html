@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Nueva rifa · Rifácil{% endblock %}
+{% block content %}
+<div class="form-shell">
+  <p class="eyebrow">Primer paso</p>
+  <h1>Crea tu rifa</h1>
+  <p>Podrás agregar pagos y personalización en los siguientes pasos.</p>
+  <form method="post" class="stacked-form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="button" type="submit">Guardar rifa</button>
+  </form>
+</div>
+{% endblock %}
+

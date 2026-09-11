@@ -2,15 +2,17 @@ from django.urls import path
 
 from .views import (
     AdminDashboardView, AdminPaymentListView, AdminPayoutCreateView, AdminPayoutListView, AdminRaffleDetailView, AdminRaffleListView, AdminReservationActionView, AdminReservationListView, BuyerReservationCancelView, BuyerReservationDetailView, CoverUploadView, CoverView, DrawRaffleView, LoginView, LogoutView, MeView, MyRaffleDetailView, MyRaffleListCreateView,
-    ManualSaleView, MercadoPagoCheckoutView, MercadoPagoWebhookView, MyPlanView, PlanCheckoutView, RaffleProCheckoutView, MyRaffleNumberListView, MyReservationListView, PublicRaffleListView, RaffleDetailView, RegisterView,
+    GoogleLoginView, ManualSaleView, MercadoPagoCheckoutView, MercadoPagoWebhookView, MyPlanView, PasswordChangeView, PlanCheckoutView, RaffleProCheckoutView, MyRaffleNumberListView, MyReservationListView, PublicRaffleListView, RaffleDetailView, RegisterView,
     ReceiptDownloadView, ReceiptUploadView, ReservationActionView, ReserveNumbersView,
 )
 
 urlpatterns = [
     path("auth/register/", RegisterView.as_view(), name="api-register"),
     path("auth/login/", LoginView.as_view(), name="api-login"),
+    path("auth/google/", GoogleLoginView.as_view(), name="api-google-login"),
     path("auth/logout/", LogoutView.as_view(), name="api-logout"),
     path("auth/me/", MeView.as_view(), name="api-me"),
+    path("auth/password/", PasswordChangeView.as_view(), name="api-password-change"),
     path("admin/dashboard/", AdminDashboardView.as_view(), name="api-admin-dashboard"),
     path("admin/raffles/", AdminRaffleListView.as_view(), name="api-admin-raffles"),
     path("admin/raffles/<slug:slug>/", AdminRaffleDetailView.as_view(), name="api-admin-raffle-detail"),

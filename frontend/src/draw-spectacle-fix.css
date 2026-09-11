@@ -1,0 +1,55 @@
+.draw-spectacle section > .draw-kicker {
+  all: unset;
+  display: inline-block !important;
+  max-width: 100% !important;
+  padding: .45rem .8rem !important;
+  border: 1px solid rgba(251,191,36,.55) !important;
+  border-radius: 999px !important;
+  color: #fbbf24 !important;
+  font-family: Inter, system-ui, sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  line-height: 1.35 !important;
+  letter-spacing: .14em !important;
+  text-transform: uppercase !important;
+  white-space: normal !important;
+  overflow-wrap: normal !important;
+}
+.draw-spectacle section > h2 {
+  display: block !important;
+  max-width: 100% !important;
+  margin: .8rem 0 !important;
+  color: #fff !important;
+  font-size: clamp(1.5rem, 5vw, 3rem) !important;
+  line-height: 1.05 !important;
+  overflow-wrap: anywhere !important;
+}
+.draw-spectacle {
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+.draw-spectacle > section {
+  display: block !important;
+  width: min(620px, calc(100vw - 2rem)) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: calc(100dvh - 2rem) !important;
+  margin: auto !important;
+  padding: clamp(1.25rem, 3vh, 2rem) !important;
+  overflow: hidden !important;
+}
+.draw-spectacle section > p {
+  margin: .5rem 0 !important;
+}
+.draw-spectacle .draw-machine {
+  width: min(210px, 45vw) !important;
+  height: min(210px, 45vw) !important;
+  margin: 1rem auto !important;
+}
+.draw-spectacle .draw-applause {
+  margin: .65rem !important;
+}
+@media (max-width: 600px) {
+  .draw-spectacle section { padding: 1.5rem !important; }
+  .draw-spectacle section > .draw-kicker { font-size: 10px !important; letter-spacing: .08em !important; }
+}

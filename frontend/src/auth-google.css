@@ -1,0 +1,23 @@
+.google-signin {
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+  margin: 1.25rem 0;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  margin: 1rem 0;
+  color: #718096;
+  font-size: .78rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #dce4dd;
+}

@@ -24,6 +24,7 @@ class Raffle(models.Model):
     terms = models.TextField("bases y condiciones", blank=True)
     accent_color = models.CharField("color principal", max_length=7, default="#0749d9")
     prize = models.CharField("premio", max_length=200)
+    prizes = models.JSONField("premios", default=list, blank=True)
     cover_image = models.FileField("imagen de portada", upload_to="raffle-covers/%Y/%m/", blank=True)
     total_numbers = models.PositiveIntegerField(
         "cantidad de números", validators=[MinValueValidator(2)]
@@ -149,6 +150,7 @@ class RaffleDraw(models.Model):
         verbose_name="número ganador",
     )
     drawn_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    winners = models.JSONField("ganadores", default=list, blank=True)
     drawn_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

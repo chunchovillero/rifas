@@ -4,6 +4,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core import mail
 from django.test import override_settings
 from datetime import timedelta
+from unittest.mock import patch
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
@@ -12,6 +13,22 @@ from raffles.tasks import release_all_expired_reservations, send_reservation_cre
 
 
 class RaffleApiTests(APITestCase):
+    def test_seo_endpoints_and_raffle_metadata(self):
+        owner = User.objects.create_user(username="seo-owner")
+        raffle = Raffle.objects.create(owner=owner, title="Rifa solidaria SEO", description="Una descripción especial", prize="Gran premio", total_numbers=20, number_price=1500, status=Raffle.Status.PUBLISHED)
+        robots = self.client.get("/robots.txt")
+        sitemap = self.client.get("/sitemap.xml")
+        shell = self.client.get(f"/seo/rifas/{raffle.slug}")
+        missing = self.client.get("/seo/rifas/no-existe")
+        self.assertEqual(robots.status_code, 200)
+        self.assertIn("Sitemap: https://rifacil.cl/sitemap.xml", robots.content.decode())
+        self.assertEqual(sitemap["Content-Type"], "application/xml")
+        self.assertIn(f"https://rifacil.cl/rifas/{raffle.slug}", sitemap.content.decode())
+        self.assertContains(shell, "Rifa solidaria SEO | Rifa online en Rifácil")
+        self.assertContains(shell, 'property="og:title"')
+        self.assertContains(shell, 'type="application/ld+json"')
+        self.assertEqual(missing.status_code, 404)
+
     @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
     def test_reservation_email_contains_code_and_numbers(self):
         owner = User.objects.create_user(username="correo-owner", email="owner@example.com")
@@ -56,6 +73,34 @@ class RaffleApiTests(APITestCase):
         )
         self.assertEqual(response.status_code, 201)
         self.assertIn("token", response.data)
+
+    def test_login_accepts_username_or_email(self):
+        User.objects.create_user(username="persona", email="persona@example.com", password="clave-segura-123")
+        by_username = self.client.post("/api/auth/login/", {"username": "persona", "password": "clave-segura-123"}, format="json")
+        by_email = self.client.post("/api/auth/login/", {"username": "PERSONA@example.com", "password": "clave-segura-123"}, format="json")
+        self.assertEqual(by_username.status_code, 200)
+        self.assertEqual(by_email.status_code, 200)
+
+    @override_settings(GOOGLE_CLIENT_ID="client-id.apps.googleusercontent.com")
+    @patch("api.views.id_token.verify_oauth2_token")
+    def test_google_login_creates_user_from_verified_email(self, verify):
+        verify.return_value = {"email": "google@example.com", "email_verified": True, "given_name": "Google"}
+        response = self.client.post("/api/auth/google/", {"credential": "signed-token"}, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("token", response.data)
+        self.assertTrue(User.objects.filter(email="google@example.com").exists())
+
+    def test_user_updates_profile_and_changes_password(self):
+        user = User.objects.create_user(username="perfil", email="old@example.com", password="clave-segura-123")
+        token = Token.objects.create(user=user)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+        profile = self.client.patch("/api/auth/me/", {"email": "new@example.com"}, format="json")
+        self.assertEqual(profile.status_code, 200)
+        changed = self.client.post("/api/auth/password/", {"current_password": "clave-segura-123", "new_password": "Clave-nueva-segura-456"}, format="json")
+        self.assertEqual(changed.status_code, 200)
+        user.refresh_from_db()
+        self.assertTrue(user.check_password("Clave-nueva-segura-456"))
+        self.assertFalse(Token.objects.filter(user=user).exists())
 
     def test_buyer_cancels_reservation_and_releases_numbers(self):
         owner = User.objects.create_user(username="cancel-owner", email="owner@example.com")

@@ -87,15 +87,16 @@ def send_winner_email(draw_id):
     from .models import RaffleDraw
 
     draw = RaffleDraw.objects.select_related("raffle", "winning_number").get(id=draw_id)
-    if not draw.winning_number.buyer_email:
-        return 0
-    return send_mail(
-        f"¡Ganaste la rifa {draw.raffle.title}!",
-        (
-            f"Hola {draw.winning_number.buyer_name},\n\n"
-            f"Tu número {draw.winning_number.number} resultó ganador. "
-            "El organizador se pondrá en contacto contigo."
-        ),
-        settings.DEFAULT_FROM_EMAIL,
-        [draw.winning_number.buyer_email],
-    )
+    sent = 0
+    winners = draw.winners or [{"position": 1, "prize": draw.raffle.prize, "number": draw.winning_number.number, "buyer_name": draw.winning_number.buyer_name}]
+    for winner in winners:
+        number = draw.raffle.numbers.filter(number=winner["number"]).first()
+        if not number or not number.buyer_email:
+            continue
+        sent += send_mail(
+            f"¡Ganaste la rifa {draw.raffle.title}!",
+            f"Hola {winner['buyer_name']},\n\nTu número {winner['number']} ganó el {winner['position']}.º premio: {winner['prize']}. El organizador se pondrá en contacto contigo.",
+            settings.DEFAULT_FROM_EMAIL,
+            [number.buyer_email],
+        )
+    return sent

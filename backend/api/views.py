@@ -8,6 +8,9 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.db import transaction
+from django.utils.text import slugify
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token
 from django.shortcuts import get_object_or_404
 from django.http import FileResponse
 from django.utils import timezone
@@ -29,7 +32,7 @@ from raffles.tasks import (
 )
 from .serializers import (
     AdminRaffleNumberSerializer, BuyerReservationSerializer, CoverUploadSerializer, ManualSaleSerializer, RaffleSerializer, RegisterSerializer, ReservationRequestSerializer,
-    ReservationSerializer, ReceiptUploadSerializer, UserSerializer,
+    PasswordChangeSerializer, ReservationSerializer, ReceiptUploadSerializer, UserSerializer, UserUpdateSerializer,
 )
 
 
@@ -101,9 +104,56 @@ class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        user = authenticate(username=request.data.get("username"), password=request.data.get("password"))
+        identifier = str(request.data.get("username", "")).strip()
+        username = identifier
+        if "@" in identifier:
+            matches = User.objects.filter(email__iexact=identifier).values_list("username", flat=True)[:2]
+            usernames = list(matches)
+            if len(usernames) != 1:
+                return Response({"detail": "No pudimos identificar una cuenta única con ese correo. Ingresa con tu usuario."}, status=status.HTTP_400_BAD_REQUEST)
+            username = usernames[0]
+        user = authenticate(username=username, password=request.data.get("password"))
         if not user:
             return Response({"detail": "Credenciales incorrectas."}, status=status.HTTP_400_BAD_REQUEST)
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response({"token": token.key, "user": UserSerializer(user).data})
+
+
+class GoogleLoginView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        if not settings.GOOGLE_CLIENT_ID:
+            return Response({"detail": "El acceso con Google aún no está configurado."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        try:
+            payload = id_token.verify_oauth2_token(
+                request.data.get("credential", ""), google_requests.Request(), settings.GOOGLE_CLIENT_ID
+            )
+        except (ValueError, TypeError):
+            return Response({"detail": "No se pudo validar tu cuenta de Google."}, status=status.HTTP_400_BAD_REQUEST)
+        email = str(payload.get("email", "")).strip().lower()
+        if not email or not payload.get("email_verified"):
+            return Response({"detail": "Google no entregó un correo verificado."}, status=status.HTTP_400_BAD_REQUEST)
+        matches = list(User.objects.filter(email__iexact=email)[:2])
+        if len(matches) > 1:
+            return Response({"detail": "Este correo está asociado a más de una cuenta. Ingresa con tu usuario."}, status=status.HTTP_409_CONFLICT)
+        if matches:
+            user = matches[0]
+        else:
+            base = slugify(email.split("@", 1)[0])[:120] or "usuario"
+            username = base
+            suffix = 2
+            while User.objects.filter(username=username).exists():
+                username = f"{base[:140-len(str(suffix))]}-{suffix}"
+                suffix += 1
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                first_name=str(payload.get("given_name", ""))[:150],
+                last_name=str(payload.get("family_name", ""))[:150],
+            )
+            user.set_unusable_password()
+            user.save(update_fields=["password"])
         token, _ = Token.objects.get_or_create(user=user)
         return Response({"token": token.key, "user": UserSerializer(user).data})
 
@@ -117,6 +167,22 @@ class LogoutView(APIView):
 class MeView(APIView):
     def get(self, request):
         return Response(UserSerializer(request.user).data)
+
+    def patch(self, request):
+        serializer = UserUpdateSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(UserSerializer(request.user).data)
+
+
+class PasswordChangeView(APIView):
+    def post(self, request):
+        serializer = PasswordChangeSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        request.user.set_password(serializer.validated_data["new_password"])
+        request.user.save(update_fields=["password"])
+        Token.objects.filter(user=request.user).delete()
+        return Response({"detail": "Contraseña actualizada. Vuelve a iniciar sesión."})
 
 
 class AdminDashboardView(APIView):
@@ -399,21 +465,28 @@ class DrawRaffleView(APIView):
                 status=RaffleNumber.Status.SOLD,
             )
         )
-        if not sold_numbers:
+        prizes = raffle.prizes or [raffle.prize]
+        if len(sold_numbers) < len(prizes):
             return Response(
-                {"detail": "Debes tener al menos un número vendido para realizar el sorteo."},
+                {"detail": f"Necesitas al menos {len(prizes)} números vendidos para sortear {len(prizes)} premios."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        winner = sold_numbers[secrets.randbelow(len(sold_numbers))]
+        pool = sold_numbers[:]
+        selected = [pool.pop(secrets.randbelow(len(pool))) for _ in prizes]
+        winners = [
+            {"position": index + 1, "prize": prize, "number": winner.number, "buyer_name": winner.buyer_name}
+            for index, (prize, winner) in enumerate(zip(prizes, selected))
+        ]
         draw = RaffleDraw.objects.create(
             raffle=raffle,
-            winning_number=winner,
+            winning_number=selected[0],
+            winners=winners,
             drawn_by=request.user,
         )
         raffle.status = Raffle.Status.CLOSED
         raffle.save(update_fields=["status", "updated_at"])
         transaction.on_commit(lambda: send_winner_email.delay(draw.id))
-        return Response({"winning_number": winner.number, "drawn_at": draw.drawn_at})
+        return Response({"winning_number": selected[0].number, "winners": winners, "drawn_at": draw.drawn_at})
 
 
 class ReserveNumbersView(APIView):
@@ -796,6 +869,8 @@ class BuyerReservationCancelView(APIView):
 
 
 class ReceiptDownloadView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
     def get(self, request, code):
         reservation = get_object_or_404(
             Reservation,

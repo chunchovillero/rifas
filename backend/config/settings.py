@@ -93,6 +93,15 @@ CORS_ALLOWED_ORIGINS = [
     if origin.strip()
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
@@ -118,3 +127,4 @@ PRO_PLAN_PRICE = int(os.getenv("PRO_PLAN_PRICE", "4990"))
 RAFFLE_PRO_PRICE = int(os.getenv("RAFFLE_PRO_PRICE", str(PRO_PLAN_PRICE // 2)))
 FREE_RAFFLE_SALE_LIMIT = int(os.getenv("FREE_RAFFLE_SALE_LIMIT", "50"))
 PLATFORM_COMMISSION_PERCENT = int(os.getenv("PLATFORM_COMMISSION_PERCENT", "10"))
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")

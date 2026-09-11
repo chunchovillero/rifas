@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    env_file: .env
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck: {test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"], interval: 5s, timeout: 5s, retries: 20}
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes: [redis_data:/data]
+    healthcheck: {test: ["CMD", "redis-cli", "ping"], interval: 5s, timeout: 3s, retries: 20}
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 60
+    env_file: .env
+    volumes: [static_data:/app/staticfiles, media_data:/app/media]
+    depends_on: {db: {condition: service_healthy}, redis: {condition: service_healthy}}
+  worker:
+    build: ./backend
+    restart: unless-stopped
+    entrypoint: []
+    command: celery -A config worker --loglevel=info
+    env_file: .env
+    volumes: [media_data:/app/media]
+    depends_on: {db: {condition: service_healthy}, redis: {condition: service_healthy}}
+  beat:
+    build: ./backend
+    restart: unless-stopped
+    entrypoint: []
+    command: celery -A config beat --loglevel=info --schedule=/tmp/celerybeat-schedule
+    env_file: .env
+    depends_on: {db: {condition: service_healthy}, redis: {condition: service_healthy}}
+  web:
+    build: {context: ./frontend, dockerfile: Dockerfile.prod, args: {VITE_API_URL: /api, VITE_GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"}}
+    restart: unless-stopped
+    ports: ["127.0.0.1:8088:80"]
+    volumes: [static_data:/srv/static:ro, media_data:/srv/media:ro]
+    depends_on: [backend]
+volumes: {postgres_data: {}, redis_data: {}, static_data: {}, media_data: {}}

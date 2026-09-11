@@ -59,3 +59,18 @@
 .countdown strong { font-size:1.8rem; font-variant-numeric:tabular-nums; }
 .cancel-reservation { margin-top:1rem; border:0; background:none; color:#9c2727; font:inherit; text-decoration:underline; cursor:pointer; }
 @media (max-width:650px) { .reservation-summary { grid-template-columns:1fr; }.buyer-reservation dl { grid-template-columns:1fr; } }
+
+.transfer-payment { margin-top:1.5rem; padding:1.35rem; border:1px solid #cbdcf5; border-radius:16px; background:linear-gradient(145deg,#f5f9ff,#fff); }
+.transfer-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; margin-bottom:1.15rem; }
+.transfer-heading span { color:var(--indigo); font-size:.7rem; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
+.transfer-heading h2 { margin:.2rem 0 0; color:var(--navy); }
+.transfer-heading small { max-width:180px; color:#617168; text-align:right; }
+.transfer-payment dl { margin:0; padding:1rem; border-radius:12px; background:#fff; }
+.transfer-payment .account-number { color:var(--indigo); font-size:1.12rem; overflow-wrap:anywhere; }
+.transfer-copy-actions { display:grid; grid-template-columns:1.25fr 1fr; gap:.65rem; margin-top:1rem; }
+.transfer-copy-actions button { display:flex; align-items:center; justify-content:center; gap:.5rem; min-height:48px; padding:.7rem .9rem; border-radius:10px; font:inherit; font-size:.84rem; font-weight:850; cursor:pointer; }
+.transfer-copy-actions svg { width:18px; height:18px; }
+.copy-account { border:0; background:var(--indigo); color:#fff; }
+.copy-all { border:1px solid #b9c9e5; background:#fff; color:var(--navy); }
+.transfer-copy-actions button:disabled { opacity:.5; cursor:not-allowed; }
+@media (max-width:600px) { .transfer-heading { flex-direction:column; }.transfer-heading small { max-width:none; text-align:left; }.transfer-copy-actions { grid-template-columns:1fr; } }

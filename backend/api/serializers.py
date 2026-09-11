@@ -1,6 +1,7 @@
 import re
 
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
 from rest_framework import serializers
 from django.urls import reverse
@@ -13,6 +14,26 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("id", "username", "email", "is_staff")
+
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("username", "email")
+
+
+class PasswordChangeSerializer(serializers.Serializer):
+    current_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True, min_length=8)
+
+    def validate_current_password(self, value):
+        if not self.context["request"].user.check_password(value):
+            raise serializers.ValidationError("La contraseña actual no es correcta.")
+        return value
+
+    def validate_new_password(self, value):
+        validate_password(value, self.context["request"].user)
+        return value
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -46,6 +67,7 @@ class AdminRaffleNumberSerializer(serializers.ModelSerializer):
 
 
 class RaffleSerializer(serializers.ModelSerializer):
+    prizes = serializers.ListField(child=serializers.CharField(max_length=200), allow_empty=False, required=False)
     owner = UserSerializer(read_only=True)
     numbers = RaffleNumberSerializer(many=True, read_only=True)
     available_count = serializers.SerializerMethodField()
@@ -54,6 +76,7 @@ class RaffleSerializer(serializers.ModelSerializer):
     sold_revenue = serializers.SerializerMethodField()
     cover_url = serializers.SerializerMethodField()
     winning_number = serializers.SerializerMethodField()
+    winners = serializers.SerializerMethodField()
     drawn_at = serializers.SerializerMethodField()
     raffle_pro_active = serializers.SerializerMethodField()
 
@@ -65,6 +88,10 @@ class RaffleSerializer(serializers.ModelSerializer):
     def get_winning_number(self, obj):
         draw = getattr(obj, "draw", None)
         return draw.winning_number.number if draw else None
+
+    def get_winners(self, obj):
+        draw = getattr(obj, "draw", None)
+        return draw.winners if draw else []
 
     def get_drawn_at(self, obj):
         draw = getattr(obj, "draw", None)
@@ -101,18 +128,25 @@ class RaffleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Raffle
         fields = (
-            "id", "owner", "title", "slug", "description", "terms", "accent_color", "prize", "cover_url",
+            "id", "owner", "title", "slug", "description", "terms", "accent_color", "prize", "prizes", "cover_url",
             "total_numbers", "number_price", "fundraising_goal", "draw_date", "status",
             "bank_name", "account_type", "account_number", "account_holder",
             "account_holder_id", "transfer_email", "phone_required", "mercadopago_enabled",
             "available_count", "reserved_count", "sold_count", "sold_revenue",
-            "winning_number", "drawn_at", "raffle_pro_active",
+            "winning_number", "winners", "drawn_at", "raffle_pro_active",
             "numbers", "created_at", "updated_at",
         )
-        read_only_fields = ("slug", "owner", "numbers", "created_at", "updated_at")
+        read_only_fields = ("slug", "owner", "prize", "numbers", "created_at", "updated_at")
 
     @transaction.atomic
     def create(self, validated_data):
+        prizes = [value.strip() for value in validated_data.pop("prizes", []) if value.strip()]
+        if not prizes and self.initial_data.get("prize"):
+            prizes = [str(self.initial_data["prize"]).strip()]
+        if not prizes:
+            raise serializers.ValidationError({"prizes": "Agrega al menos un premio."})
+        validated_data["prize"] = prizes[0]
+        validated_data["prizes"] = prizes
         raffle = Raffle.objects.create(owner=self.context["request"].user, **validated_data)
         RaffleNumber.objects.bulk_create(
             [RaffleNumber(raffle=raffle, number=n) for n in range(1, raffle.total_numbers + 1)]
@@ -121,6 +155,10 @@ class RaffleSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
+        if "prizes" in validated_data:
+            prizes = [value.strip() for value in validated_data["prizes"] if value.strip()]
+            validated_data["prizes"] = prizes
+            validated_data["prize"] = prizes[0]
         old_total = instance.total_numbers
         new_total = validated_data.get("total_numbers", old_total)
         if new_total < old_total:

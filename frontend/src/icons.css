@@ -1,0 +1,5 @@
+nav a:not(.brand), nav button.link { display:inline-flex; align-items:center; gap:.35rem; }
+nav a:not(.brand) svg, nav button.link svg { width:17px; height:17px; stroke-width:2; flex:none; }
+@media (max-width: 760px) {
+  nav a:not(.brand) svg, nav button.link svg { width:18px; height:18px; }
+}
